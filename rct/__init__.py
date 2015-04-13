@@ -3,56 +3,13 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
-from rct.communication.TransformCommRSB import TransformCommRSB
-
-class CommunicatorType(object):
-    '''
-    Enum fake.
-    '''
-    AUTO = "AUTO"
-    RSB = "RSB"
-    ROS = "ROS"
-
-class TransformerConfig(object):
-    '''
-    Configuration holder.
-    '''
-
-    __cache_time = None
-    __communicator_type = None
-
-    def __init__(self, communicator_type="RSB", chache_time=5.0):
-
-        self.__communicator_type = getattr(CommunicatorType, communicator_type, 'RSB')
-        self.__cache_time = chache_time
-
-#         if hasattr(CommunicatorType, communicator_type):
-#             self.__communicator_type = eval(CommunicatorType.communicator_type)
-#
-#         else:
-#             raise Exception("Communicator type {} is not supported".format(communicator_type))
-
-    def get_cache_time(self):
-        return self.__cache_time
-
-    def print_contents(self):
-        print "comm_type: {}, cache_time: {}".format(self.__communicator_type, self.__cache_time)
-
-    def get_comm_type(self):
-        return self.__communicator_type
-
-class TransformerTF2(object):
-
-    __cache_time = None
-
-    def __init__(self, cache_time):
-        self.__cache_time = cache_time
 
 class TransformerFactory(object):
-    from rct.util import Singleton
     '''
     Singlet to create a unified transformer factory
     '''
+    from rct.util import Singleton
+    from rct.core.TransformerConfig import TransformerConfig
     __metaclass__ = Singleton
 
     __core = None
@@ -70,6 +27,10 @@ class TransformerFactory(object):
         :param configuration: A TransformerConfig
         :return: Instance of a TransformReceiver
         '''
+        # imports
+        from rct.core.TransformerTF2 import TransformerTF2
+        from rct.communication.TransformCommRSB import TransformCommRSB
+        from rct.util import CommunicatorType
 
         # deal with the listeners
         for a_listener in listeners:
@@ -104,6 +65,9 @@ class TransformerFactory(object):
         :param configuration: A TransformerConfig
         :return: Instance of a TransformPublisher
         '''
+        # imports
+        from rct.communication.TransformCommRSB import TransformCommRSB
+        from rct.util import CommunicatorType
 
         # Create the communication backend
         if (configuration.get_comm_type() in (CommunicatorType.AUTO, CommunicatorType.RSB)):

@@ -15,6 +15,7 @@ import rsb
 #
 #     @abc.abstractproperty
 #     ...
+# aintnobodygottimeforthat
 
 class TransformCommRSB(object):
     '''
@@ -97,7 +98,6 @@ class TransformCommRSB(object):
         self.__rsb_informer_transform = rsb.createInformer(self.__scope_transforms)
         self.__rsb_informer_sync = rsb.createInformer(self.__scope_sync)
 
-
         self.__rsb_listener_transform.addHandler(self.transform_handler)
         self.__rsb_listener_sync.addHandler(self.sync_handler)
 
@@ -169,12 +169,40 @@ class TransformCommRSB(object):
     def print_contents(self):
         print "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic))
 
-    def transform_handler(self):
-        # TODO implement
-        pass
+    def transform_handler(self, event):
+        # aka transformCallback in cpp
+        if event.getMetaData().getSenderId() == self.__rsb_informer_transform.getId():
+            print "Received transform from myself. Ignore. (id :{}".format(str(event.getMetaData().getSenderId()))
+            return
 
-    def sync_handler(self):
+        authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
         # TODO implement
+
+#    C++ code:
+#     Scope staticScope = rsbInformerTransform->getScope()->concat(Scope(scopeSuffixStatic));
+#     bool isStatic = (event->getScope() == staticScope);
+#
+#     t->setAuthority(authority);
+#     RSCDEBUG(logger, "Received transform from " << authority);
+#     RSCTRACE(logger, "Received transform: " << *t);
+#
+#     boost::mutex::scoped_lock(mutex);
+#     vector<TransformListener::Ptr>::iterator it0;
+#     for (it0 = listeners.begin(); it0 != listeners.end(); ++it0) {
+#         TransformListener::Ptr l = *it0;
+#         l->newTransformAvailable(*t, isStatic);
+#     }
+
+
+    def sync_handler(self, event):
+        # aka triggerCallback in cpp
+        if event.getMetaData().getSenderId() == self.__rsb_informer_transform.getId():
+            print "Received transform from myself. Ignore. (id :{}".format(str(event.getMetaData().getSenderId()))
+            return
+
+        # publish send cache
+        # TODO: thread this?
+        self.publish_cache()
         pass
 
     def send_transform(self, transform, transform_type):
@@ -182,18 +210,31 @@ class TransformCommRSB(object):
         Add transform information to the rct data structure.
         :param transform:
         :param transform_type:
+        :return: True unless an error occured
         '''
+        if not self.__rsb_informer_transform:
+            print "RSB communicator was not initialized!"
+
+
         # TODO implement
+
         return True
 
-    def transform_callback(self, event):
-        # TODO implement
-        pass
-
-    def trigger_callback(self, event):
-        # TODO implement
-        pass
-
     def publish_cache(self):
-        # TODO implement
-        pass
+        # TODO: implement
+
+        for k, v in self.__send_cache_dynamic.iteritems():
+            # event = Event(scope = self.scope,data = data, type = type(data), userInfos = userInfos, userTimes = userTimes)
+            # self.__rsb_informer_transform.publishData()
+            self.__rsb_informer_transform.createEvent
+            # TODO: why like this?
+#     C++ code:
+#         EventPtr event(rsbInformerTransform->createEvent());
+#         event->setData(make_shared<Transform>(it->second.first));
+#         event->setScope(rsbInformerTransform->getScope()->concat(Scope(scopeSuffixDynamic)));
+#         event->setMetaData(it->second.second);
+#         rsbInformerTransform->publish(event);
+ 
+        for k, v in self.__send_cache_static.iteritems():
+            # TODO: see above
+            pass
