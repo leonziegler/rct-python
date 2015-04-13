@@ -3,27 +3,28 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+from rct.communication.TransformCommRSB import TransformCommRSB
 
 class CommunicatorType(object):
     '''
     Enum fake.
     '''
-    AUTO = 1
-    RSB = 2
-    ROS = 3
+    AUTO = "AUTO"
+    RSB = "RSB"
+    ROS = "ROS"
 
 class TransformerConfig(object):
     '''
     Configuration holder.
     '''
 
-    __chache_time = None
+    __cache_time = None
     __communicator_type = None
 
     def __init__(self, communicator_type="RSB", chache_time=5.0):
 
         self.__communicator_type = getattr(CommunicatorType, communicator_type, 'RSB')
-        self.__chache_time = chache_time
+        self.__cache_time = chache_time
 
 #         if hasattr(CommunicatorType, communicator_type):
 #             self.__communicator_type = eval(CommunicatorType.communicator_type)
@@ -31,14 +32,21 @@ class TransformerConfig(object):
 #         else:
 #             raise Exception("Communicator type {} is not supported".format(communicator_type))
 
-    def get_chache_time(self):
+    def get_cache_time(self):
         return self.__cache_time
 
+    def print_contents(self):
+        print "comm_type: {}, cache_time: {}".format(self.__communicator_type, self.__cache_time)
+
+    def get_comm_type(self):
+        return self.__communicator_type
 
 class TransformerTF2(object):
 
-    def __init__(self):
-        pass
+    __cache_time = None
+
+    def __init__(self, cache_time):
+        self.__cache_time = cache_time
 
 class TransformerFactory(object):
     from rct.util import Singleton
@@ -55,33 +63,63 @@ class TransformerFactory(object):
         self.__comms = []
         self.__listeners = []
 
-    def create_transform_receiver(self, listeners=[], config=TransformerConfig()):
+    def create_transform_receiver(self, listeners=[], configuration=TransformerConfig()):
+        '''
+        Creates the chosen transform receiver implementation.
+        :param listener: list of listeners
+        :param configuration: A TransformerConfig
+        :return: Instance of a TransformReceiver
         '''
 
-        :param listener: list of listeners
-        :param config:
-        '''
+        # deal with the listeners
         for a_listener in listeners:
             self.__listeners.append(a_listener)
 
-        self.__core = TransformerTF2(config.get_cache_time())
+        self.__core = TransformerTF2(configuration.get_cache_time())
         self.__listeners.append(self.__core)
-        # TODO FINISH
 
-    def create_transform_receivers(self, listeners, config=TransformerConfig()):
+
+        # Create the communication backend
+        if (configuration.get_comm_type() in (CommunicatorType.AUTO, CommunicatorType.RSB)):
+            self.__comms.append(TransformCommRSB("read-only", self.__listeners))
+
+        if (configuration.get_comm_type() is CommunicatorType.ROS):
+            raise Exception("ROS communicator not supported :(")
+
+        if len(self.__comms) == 0:
+            raise Exception("Can not generate communicator {}".format(configuration.get_comm_type()))
+
+        # TODO: see cpp code
+        self.__comms[0].init(configuration)
+
+        from rct.core.TransformReceiver import TransformReceiver
+        return TransformReceiver(self.__core, self.__comms[0], configuration)
+
+
+
+    def create_transform_publisher(self, name, configuration=TransformerConfig()):
+        '''
+        Creates the chosen transform publisher implementation.
+        :param name: The desired name
+        :param configuration: A TransformerConfig
+        :return: Instance of a TransformPublisher
         '''
 
-        :param listeners: array of listeners
-        :param config:
-        '''
-        pass
+        # Create the communication backend
+        if (configuration.get_comm_type() in (CommunicatorType.AUTO, CommunicatorType.RSB)):
+            self.__comms.append(TransformCommRSB(name))
 
-    def create_transform_publisher(self, name, config=TransformerConfig()):
-        '''
+        if (configuration.get_comm_type() is CommunicatorType.ROS):
+            raise Exception("ROS communicator not supported :(")
 
-        :param name:
-        :param config:
-        '''
+        if len(self.__comms) == 0:
+            raise Exception("Can not generate communicator {}".format(configuration.get_comm_type()))
+
+        # TODO: see cpp code
+        self.__comms[0].init(configuration);
+
+        from rct.core.TransformPublisher import TransformPublisher
+        return TransformPublisher(self.__comms[0], configuration)
 
 
 

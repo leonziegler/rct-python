@@ -6,6 +6,16 @@ Created on Apr 13, 2015
 from rct.communication.TransformConverter import TransformConverter
 import rsb
 
+# TODO: use abc for this class...
+#
+# import abc
+#
+# class TransformCommunicator(object):
+#     __metaclass__ = abc.ABCMeta
+#
+#     @abc.abstractproperty
+#     ...
+
 class TransformCommRSB(object):
     '''
     classdocs
@@ -29,9 +39,11 @@ class TransformCommRSB(object):
     __send_cache_dynamic = None
     __send_cache_static = None
 
+    __transformer_config = None
+
     def __init__(self,
                  authority,
-                 transform_listener,
+                 transform_listener=None,
                  scope_sync=None,
                  scope_transforms=None,
                  scope_suffic_static=None,
@@ -42,7 +54,8 @@ class TransformCommRSB(object):
         '''
 
         self.__listeners = []
-        self.addTransformListener(transform_listener)
+        if transform_listener:
+            self.add_transform_listener(transform_listener)
 
         self.__authority = authority
 
@@ -76,6 +89,8 @@ class TransformCommRSB(object):
         except Exception, e:
             print "ERROR: Converter already present", e
 
+        # TODO: what about the config?!
+        # self.__transformer_config = transformer_config
 
         self.__rsb_listener_transform = rsb.createListener(self.__scope_transforms)
         self.__rsb_listener_sync = rsb.createListener(self.__scope_sync)
@@ -136,6 +151,9 @@ class TransformCommRSB(object):
     def get_authority_name(self):
         return self.__authority
 
+    def get_config(self):
+        return self.__transformer_config
+
     def request_sync(self):
 
         if not self.__rsb_informer_sync:
@@ -147,6 +165,9 @@ class TransformCommRSB(object):
             # TODO: what to publish here?
             self.__rsb_informer_sync.publish()
             # rsbInformerSync->publish(shared_ptr<void>());
+
+    def print_contents(self):
+        print "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic))
 
     def transform_handler(self):
         # TODO implement
