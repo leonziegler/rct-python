@@ -3,6 +3,8 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+from rct.core.Transform import Transform
+from rct.util import TransformType
 
 class TransformerFactory(object):
     '''

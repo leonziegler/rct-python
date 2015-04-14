@@ -3,10 +3,12 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
-from rsb import Event, Scope
+from rsb import Event, Scope, MetaData
 import rsb.converter
 
 from rct.communication.TransformConverter import TransformConverter
+from rct.core.Transform import Transform
+from rct.util import TransformType
 
 
 # TODO: use abc for this class...
@@ -50,7 +52,7 @@ class TransformCommRSB(object):
                  transform_listener=None,
                  scope_sync=None,
                  scope_transforms=None,
-                 scope_suffic_static=None,
+                 scope_suffix_static=None,
                  scope_suffix_dynamic=None,
                  user_key_authority=None):
         '''
@@ -67,8 +69,8 @@ class TransformCommRSB(object):
             self.__scope_sync = scope_sync
         if scope_transforms:
             self.__scope_transforms = scope_transforms
-        if scope_suffic_static:
-            self.__scope_suffic_static = scope_suffic_static
+        if scope_suffix_static:
+            self.__scope_suffix_static = scope_suffix_static
         if scope_suffix_dynamic:
             self.__scope_suffix_dynamic = scope_suffix_dynamic
         if user_key_authority:
@@ -167,50 +169,36 @@ class TransformCommRSB(object):
         else:
             raise Exception("communicator was not initialized!")
 
-
     def print_contents(self):
         print "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic))
 
     def transform_handler(self, event):
-        # aka transformCallback in cpp
+        '''
+        Handles incoming transformation updates.
+
+        The C++ counterpart is "transformCallback"
+
+        :param event:Incoming event
+        '''
+
         if event.getSenderId() == self.__rsb_informer_transform.getId():
-            print "Received transform from myself. Ignore. (id :{})".format(str(event.getSenderId()))
+            print "Received transform update from myself. Ignore. (id :{})".format(str(event.getSenderId()))
             return
 
-        authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
-        # TODO implement
+        # data is of type rct.core.Transform
+        data = event.getData()
+        received_authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
+        static_scope = self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static))
 
-#    C++ code:
-#     Scope staticScope = rsbInformerTransform->getScope()->concat(Scope(scopeSuffixStatic));
-#     bool isStatic = (event->getScope() == staticScope);
-#
-#     t->setAuthority(authority);
-#     RSCDEBUG(logger, "Received transform from " << authority);
-#     RSCTRACE(logger, "Received transform: " << *t);
-#
-#     boost::mutex::scoped_lock(mutex);
-#     vector<TransformListener::Ptr>::iterator it0;
-#     for (it0 = listeners.begin(); it0 != listeners.end(); ++it0) {
-#         TransformListener::Ptr l = *it0;
-#         l->newTransformAvailable(*t, isStatic);
-#     }
+        print "DEBUG: incoming vs static_scope: {} == {}".format(event.getScope(), static_scope)
+        is_static = event.getScope() == static_scope
 
+        data.set_authority(received_authority)
+        print "Received transform from {}: {}".format(received_authority, str(data))
 
-    def sync_handler(self, event):
-        '''
-        Handles data from the syncronisation source.
-
-        The C++ counterpart is "triggerCallback"
-
-        :param event: Incomming event
-        '''
-
-        if event.getSenderId() == self.__rsb_informer_sync.getId():
-            print "Received transform from myself. Ignore. (id :{})".format(str(event.getSenderId()))
-            return
-
-        # TODO: thread this?
-        self.publish_cache()
+        # TODO: threaded?
+        for a_listener in self.__listeners:
+            a_listener.new_transform_available(data, is_static)
 
     def send_transform(self, transform, transform_type):
         '''
@@ -222,23 +210,71 @@ class TransformCommRSB(object):
         if not self.__rsb_informer_transform:
             print "RSB communicator was not initialized!"
 
+        # some small type checks for usability
+        assert isinstance(transform, Transform), "Input transformation has to be of type rct.Transform! (Input was: {})".format(type(transform))
+        assert hasattr(TransformType, transform_type), "Input transformation type has to be of type rct.TransformType! (Input was: {})".format(type(transform_type))
 
-        # TODO implement
+        cache_key = transform.get_frame_parent() + transform.get_frame_child()
+        meta_data = MetaData()
+
+        if transform.getAuthority() is "":
+            meta_data.setUserInfo(self.__user_key_authority, self.__authority);
+        else:
+            meta_data.setUserInfo(self.__user_key_authority, transform.get_authority())
+
+        print "Publishing transform from {}".format(self.__rsb_informer_transform.getId())
+
+        # TODO: threaded?
+        event = Event()
+        event.setData(transform)
+        event.setMetaData(meta_data)
+
+        if transform_type is TransformType.STATIC:
+            self.__send_cache_static[cache_key] = (transform, meta_data)
+            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static)))
+
+        elif transform_type is TransformType.DYNAMIC:
+            self.__send_cache_dynamic[cache_key] = (transform, meta_data)
+            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_dynamic)))
+
+        else:
+            print "Cannot send transform. Reason: Unknown TransformType: {}".format(str(transform_type))
+            return False
+
+        print "sending {} to scope {}".format(str(transform), event.getScope())
+        self.__rsb_informer_transform.publishEvent(event)
+        print "done."
 
         return True
 
-    def publish_cache(self):
+    def sync_handler(self, event):
+        '''
+        Handles data from the syncronisation source.
 
+        The C++ counterpart is "triggerCallback"
+
+        :param event: Incoming event
+        '''
+
+        if event.getSenderId() == self.__rsb_informer_sync.getId():
+            print "Received sync request from myself. Ignore. (id :{})".format(str(event.getSenderId()))
+            return
+
+        # TODO: thread this?
+        self.publish_cache()
+
+    def publish_cache(self):
+        print "Publishing cache..."
         for _, v in self.__send_cache_dynamic.iteritems():
             event = Event()
             event.setData(v[0])
-            event.setScope(self.__rsb_informer_transform.getScope().contact(self.__scope_suffix_dynamic))
+            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_dynamic)))
             event.setMetaData(v[1])
             self.__rsb_informer_transform.publishEvent(event)
 
         for _, v in self.__send_cache_static.iteritems():
             event = Event()
             event.setData(v[0])
-            event.setScope(self.__rsb_informer_transform.getScope().contact(self.__scope_suffix_static))
+            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static)))
             event.setMetaData(v[1])
             self.__rsb_informer_transform.publishEvent(event)

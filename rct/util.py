@@ -12,6 +12,13 @@ class CommunicatorType(object):
     RSB = "RSB"
     ROS = "ROS"
 
+class TransformType(object):
+    '''
+    Enum fake.
+    '''
+    STATIC = "STATIC"
+    DYNAMIC = "DYNAMIC"
+
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):

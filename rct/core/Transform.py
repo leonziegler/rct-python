@@ -15,3 +15,16 @@ class Transform(object):
         '''
         Constructor
         '''
+
+
+    def get_frame_parent(self):
+        pass
+
+    def get_frame_child(self):
+        pass
+    def set_authority(self):
+        pass
+
+    def get_authority(self):
+        pass
+
