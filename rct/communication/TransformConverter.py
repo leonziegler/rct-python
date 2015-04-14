@@ -5,30 +5,53 @@ Created on Apr 13, 2015
 '''
 import time
 
-from rsb.converter import Converter
+from rsb.converter import Converter, ProtocolBufferConverter
+
+from rct.core.Transform import Transform
+from rct.proto.FrameTransform_pb2 import FrameTransform
+
 
 class TransformConverter(Converter):
     '''
     classdocs
     '''
 
+    __internal_converter = None
+
     def __init__(self):
         '''
         Constructor
         '''
         # TODO FIX THIS!
-        super(TransformConverter, self).__init__(bytearray, tuple, '.*')
+        super(TransformConverter, self).__init__(bytearray, type(FrameTransform), type(Transform))
+        __internal_converter = ProtocolBufferConverter(FrameTransform)
+
 
     def serialize(self, data):
-        # TODO !!
-        return data[1], data[0]
+        domain = data[1]
+        frame_transform = self.domainToRST(domain)
+
+        return type(frame_transform), self.__internal_converter.serialize(frame_transform)
+
+
 
     def deserialize(self, data, wireSchema):
-        # TODO !!
-        return wireSchema, data
 
-    def domainToRST(self, transform , frame_transform):
+        convertee = self.__internal_converter.deserialize(data, wireSchema)
+        frame_transform = convertee[1]
+        transform = self.rstToDomain(frame_transform)
+
+#         return wireSchema, transform
+        return convertee[0], transform
+
+
+
+    def domainToRST(self, transform):
+        frame_transform = FrameTransform()
         timestamp = time.time()
+        return frame_transform
+
+        # TODO: IMPLEMENT
 
         frame_transform.set_frame_parent(transform.getFrameParent());
         frame_transform.set_frame_child(transform.getFrameChild())
@@ -45,8 +68,12 @@ class TransformConverter(Converter):
 
         return frame_transform
 
-    def rstToDomain(self, frame_transform, transform):
+    def rstToDomain(self, frame_transform):
+        transform = Transform()
 
+        return transform
+
+        # TODO: FIXX
         timestamp = time.time()
 
         # TODO: numpy magic

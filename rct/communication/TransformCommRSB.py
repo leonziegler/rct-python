@@ -3,8 +3,11 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+from rsb import Event, Scope
+import rsb.converter
+
 from rct.communication.TransformConverter import TransformConverter
-import rsb
+
 
 # TODO: use abc for this class...
 #
@@ -16,7 +19,6 @@ import rsb
 #     @abc.abstractproperty
 #     ...
 # aintnobodygottimeforthat
-
 class TransformCommRSB(object):
     '''
     classdocs
@@ -25,7 +27,7 @@ class TransformCommRSB(object):
     __authority = None
     __scope_sync = "/rct/sync";
     __scope_transforms = "/rct/transform";
-    __scope_suffic_static = "/static";
+    __scope_suffix_static = "/static";
     __scope_suffix_dynamic = "/dynamic";
     __user_key_authority = "authority";
 
@@ -37,6 +39,7 @@ class TransformCommRSB(object):
     __listeners = None
 
     # dict: { str : (rct.transform, rsb.metadata), }
+    # str:
     __send_cache_dynamic = None
     __send_cache_static = None
 
@@ -72,8 +75,8 @@ class TransformCommRSB(object):
             self.__user_key_authority = user_key_authority
 
 
-        __send_cache_dynamic = {}
-        __send_cache_static = {}
+        self.__send_cache_dynamic = {}
+        self.__send_cache_static = {}
 
     def init(self, transformer_config):
         '''
@@ -82,13 +85,13 @@ class TransformCommRSB(object):
         '''
 
         try:
-            # TODO: is this correcT?
             converter = TransformConverter()
-            # converter = rsb.converter.ProtocolBufferConverter(messageClass=TransformConverter)
             rsb.converter.registerGlobalConverter(converter)
 
-        except Exception, e:
-            print "ERROR: Converter already present", e
+        except RuntimeError:
+            pass
+        except Exception as e:
+            print "ERROR: ", type(e), e
 
         # TODO: what about the config?!
         # self.__transformer_config = transformer_config
@@ -155,24 +158,23 @@ class TransformCommRSB(object):
         return self.__transformer_config
 
     def request_sync(self):
-
-        if not self.__rsb_informer_sync:
-            raise Exception("communicator was not initialized!")
+        '''
+        Requests a sync of transformations from all others in the network.
+        '''
+        if self.__rsb_informer_sync:
+            print "Sending sync request trigger from id {}".format(self.__rsb_informer_sync.getId())
+            self.__rsb_informer_sync.publishData(None)
         else:
+            raise Exception("communicator was not initialized!")
 
-            print "Sending sync request trigger from id {}".format(self.__rsb_informer_sync.getId().getAsUUID())
-            # trigger other instances to send transforms
-            # TODO: what to publish here?
-            self.__rsb_informer_sync.publish()
-            # rsbInformerSync->publish(shared_ptr<void>());
 
     def print_contents(self):
         print "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic))
 
     def transform_handler(self, event):
         # aka transformCallback in cpp
-        if event.getMetaData().getSenderId() == self.__rsb_informer_transform.getId():
-            print "Received transform from myself. Ignore. (id :{}".format(str(event.getMetaData().getSenderId()))
+        if event.getSenderId() == self.__rsb_informer_transform.getId():
+            print "Received transform from myself. Ignore. (id :{})".format(str(event.getSenderId()))
             return
 
         authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
@@ -195,15 +197,20 @@ class TransformCommRSB(object):
 
 
     def sync_handler(self, event):
-        # aka triggerCallback in cpp
-        if event.getMetaData().getSenderId() == self.__rsb_informer_transform.getId():
-            print "Received transform from myself. Ignore. (id :{}".format(str(event.getMetaData().getSenderId()))
+        '''
+        Handles data from the syncronisation source.
+
+        The C++ counterpart is "triggerCallback"
+
+        :param event: Incomming event
+        '''
+
+        if event.getSenderId() == self.__rsb_informer_sync.getId():
+            print "Received transform from myself. Ignore. (id :{})".format(str(event.getSenderId()))
             return
 
-        # publish send cache
         # TODO: thread this?
         self.publish_cache()
-        pass
 
     def send_transform(self, transform, transform_type):
         '''
@@ -221,20 +228,17 @@ class TransformCommRSB(object):
         return True
 
     def publish_cache(self):
-        # TODO: implement
 
-        for k, v in self.__send_cache_dynamic.iteritems():
-            # event = Event(scope = self.scope,data = data, type = type(data), userInfos = userInfos, userTimes = userTimes)
-            # self.__rsb_informer_transform.publishData()
-            self.__rsb_informer_transform.createEvent
-            # TODO: why like this?
-#     C++ code:
-#         EventPtr event(rsbInformerTransform->createEvent());
-#         event->setData(make_shared<Transform>(it->second.first));
-#         event->setScope(rsbInformerTransform->getScope()->concat(Scope(scopeSuffixDynamic)));
-#         event->setMetaData(it->second.second);
-#         rsbInformerTransform->publish(event);
- 
-        for k, v in self.__send_cache_static.iteritems():
-            # TODO: see above
-            pass
+        for _, v in self.__send_cache_dynamic.iteritems():
+            event = Event()
+            event.setData(v[0])
+            event.setScope(self.__rsb_informer_transform.getScope().contact(self.__scope_suffix_dynamic))
+            event.setMetaData(v[1])
+            self.__rsb_informer_transform.publishEvent(event)
+
+        for _, v in self.__send_cache_static.iteritems():
+            event = Event()
+            event.setData(v[0])
+            event.setScope(self.__rsb_informer_transform.getScope().contact(self.__scope_suffix_static))
+            event.setMetaData(v[1])
+            self.__rsb_informer_transform.publishEvent(event)

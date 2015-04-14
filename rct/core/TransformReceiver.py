@@ -3,12 +3,12 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
-from rct import TransformerConfig
 
 class TransformReceiver(object):
     '''
     Interface to create Transformation receivers.
     '''
+    from rct.core.TransformerConfig import TransformerConfig
     __core = None
     __comm = None
     __config = None

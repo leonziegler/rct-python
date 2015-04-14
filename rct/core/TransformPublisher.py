@@ -3,12 +3,14 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
-from rct import TransformerConfig
 
 class TransformPublisher(object):
     '''
     Interface to create Transformation publishers.
     '''
+
+    from rct.core.TransformerConfig import TransformerConfig
+
     __comm = None
     __config = None
 
