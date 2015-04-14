@@ -90,8 +90,8 @@ class TransformCommRSB(object):
             converter = TransformConverter()
             rsb.converter.registerGlobalConverter(converter)
 
-        except RuntimeError:
-            pass
+        except RuntimeError as re:
+            print "ERROR: ", re
         except Exception as e:
             print "ERROR: ", type(e), e
 
@@ -180,15 +180,15 @@ class TransformCommRSB(object):
 
         :param event:Incoming event
         '''
-
+        print "DATA :D"
         if event.getSenderId() == self.__rsb_informer_transform.getId():
-            print "Received transform update from myself. Ignore. (id :{})".format(str(event.getSenderId()))
+            print "Received transform update from myself. Ignore. (id: {})".format(str(event.getSenderId()))
             return
 
         # data is of type rct.core.Transform
         data = event.getData()
         received_authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
-        static_scope = self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static))
+        static_scope = self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_static))
 
         print "DEBUG: incoming vs static_scope: {} == {}".format(event.getScope(), static_scope)
         is_static = event.getScope() == static_scope
@@ -207,6 +207,7 @@ class TransformCommRSB(object):
         :param transform_type:
         :return: True unless an error occured
         '''
+
         if not self.__rsb_informer_transform:
             print "RSB communicator was not initialized!"
 
@@ -217,7 +218,7 @@ class TransformCommRSB(object):
         cache_key = transform.get_frame_parent() + transform.get_frame_child()
         meta_data = MetaData()
 
-        if transform.getAuthority() is "":
+        if transform.get_authority() is "":
             meta_data.setUserInfo(self.__user_key_authority, self.__authority);
         else:
             meta_data.setUserInfo(self.__user_key_authority, transform.get_authority())
@@ -227,21 +228,23 @@ class TransformCommRSB(object):
         # TODO: threaded?
         event = Event()
         event.setData(transform)
+        event.setType(type(transform))
         event.setMetaData(meta_data)
 
         if transform_type is TransformType.STATIC:
             self.__send_cache_static[cache_key] = (transform, meta_data)
-            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static)))
+            event.setScope(self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_static)))
 
         elif transform_type is TransformType.DYNAMIC:
             self.__send_cache_dynamic[cache_key] = (transform, meta_data)
-            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_dynamic)))
+            event.setScope(self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_dynamic)))
 
         else:
             print "Cannot send transform. Reason: Unknown TransformType: {}".format(str(transform_type))
             return False
 
-        print "sending {} to scope {}".format(str(transform), event.getScope())
+        print "Sending {} to scope {}".format(str(transform), event.getScope())
+        transform.print_contents()
         self.__rsb_informer_transform.publishEvent(event)
         print "done."
 
@@ -257,7 +260,7 @@ class TransformCommRSB(object):
         '''
 
         if event.getSenderId() == self.__rsb_informer_sync.getId():
-            print "Received sync request from myself. Ignore. (id :{})".format(str(event.getSenderId()))
+            print "Received sync request from myself. Ignore. (id: {})".format(str(event.getSenderId()))
             return
 
         # TODO: thread this?
@@ -268,13 +271,15 @@ class TransformCommRSB(object):
         for _, v in self.__send_cache_dynamic.iteritems():
             event = Event()
             event.setData(v[0])
-            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_dynamic)))
+            event.setType(type(v[0]))
+            event.setScope(self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_dynamic)))
             event.setMetaData(v[1])
             self.__rsb_informer_transform.publishEvent(event)
 
         for _, v in self.__send_cache_static.iteritems():
             event = Event()
             event.setData(v[0])
-            event.setScope(self.__rsb_informer_transform.getScope().contact(Scope(self.__scope_suffix_static)))
+            event.setType(type(v[0]))
+            event.setScope(self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_static)))
             event.setMetaData(v[1])
             self.__rsb_informer_transform.publishEvent(event)
