@@ -6,7 +6,6 @@ Created on Apr 13, 2015
 import time
 
 from rsb.converter import Converter, ProtocolBufferConverter
-from rst.timing.Timestamp_pb2 import Timestamp
 
 from rct.core.Transform import Transform
 from rct.proto.FrameTransform_pb2 import FrameTransform
@@ -29,23 +28,20 @@ class TransformConverter(Converter):
 
 
     def serialize(self, data):
-
-        frame_transform = self.domainToRST(data)
+        frame_transform = self.domain_to_RST(data)
         serialized = self.__internal_converter.serialize(frame_transform)
-        print "serialized: ", serialized
-
         return serialized
 
 
     def deserialize(self, data, wireSchema):
-
-        wire_schema, frame_transform = self.__internal_converter.deserialize(data, wireSchema)
-        transform = self.rstToDomain(frame_transform)
-        return Transform, transform
-
+        frame_transform = self.__internal_converter.deserialize(data, wireSchema)
+        transform = self.rst_to_domain(frame_transform)
+        return transform
 
 
-    def domainToRST(self, transform):
+
+
+    def domain_to_RST(self, transform):
         frame_transform = FrameTransform()
 
         frame_transform.frame_parent = transform.get_frame_parent()
@@ -64,9 +60,9 @@ class TransformConverter(Converter):
 
         return frame_transform
 
-    def rstToDomain(self, frame_transform):
+    def rst_to_domain(self, frame_transform):
         # TODO: is this timestamp the right one? feels weird!
-        transform = Transform(None, frame_transform.frame_parent(), frame_transform.frame_child(), time.time())
+        transform = Transform(None, frame_transform.frame_parent, frame_transform.frame_child, time.time)
 
         # TODO: implement
 

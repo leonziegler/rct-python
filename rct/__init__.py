@@ -73,7 +73,7 @@ class TransformerFactory(object):
 
         # Create the communication backend
         if (configuration.get_comm_type() in (CommunicatorType.AUTO, CommunicatorType.RSB)):
-            self.__comms.append(TransformCommRSB(name))
+            new_comm = TransformCommRSB(name)
 
         if (configuration.get_comm_type() is CommunicatorType.ROS):
             raise Exception("ROS communicator not supported :(")
@@ -82,12 +82,32 @@ class TransformerFactory(object):
             raise Exception("Can not generate communicator {}".format(configuration.get_comm_type()))
 
         # TODO: see cpp code
-        self.__comms[0].init(configuration);
+        new_comm.init(configuration);
+        # TODO: why was this it in the cpp code? this now works ... weird!
+        self.__comms.append(new_comm)
 
         from rct.core.TransformPublisher import TransformPublisher
-        return TransformPublisher(self.__comms[0], configuration)
+        return TransformPublisher(new_comm, configuration)
 
 
 
 if __name__ == '__main__':
     print "import this lib to use rct..."
+    import time
+    import rct
+    import logging
+    logging.basicConfig()
+    a = rct.TransformerFactory()
+    r = a.create_transform_receiver()
+    p = a.create_transform_publisher("blubbAuth")
+
+    t_s = rct.Transform("blub", "parentoruu", "childoruu", time.time())
+    p.send_transform(t_s, rct.TransformType.STATIC)
+
+    # t_d = rct.Transform("bla", "leParent", "leChild", time.time())
+    # p.send_transform(t_d, rct.TransformType.DYNAMIC)
+
+    # err
+    # p.send_transform(rct.Transform(), rct.TransformType.STATIC)
+
+    print "done."

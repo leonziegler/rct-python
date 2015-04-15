@@ -3,6 +3,8 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+import traceback
+
 from rsb import Event, Scope, MetaData
 import rsb.converter
 
@@ -40,6 +42,8 @@ class TransformCommRSB(object):
 
     __listeners = None
 
+    __transform_converter = None
+
     # dict: { str : (rct.transform, rsb.metadata), }
     # str:
     __send_cache_dynamic = None
@@ -49,7 +53,7 @@ class TransformCommRSB(object):
 
     def __init__(self,
                  authority,
-                 transform_listener=None,
+                 transform_listeners=None,
                  scope_sync=None,
                  scope_transforms=None,
                  scope_suffix_static=None,
@@ -60,8 +64,8 @@ class TransformCommRSB(object):
         '''
 
         self.__listeners = []
-        if transform_listener:
-            self.add_transform_listener(transform_listener)
+        if transform_listeners:
+            self.add_transform_listeners(transform_listeners)
 
         self.__authority = authority
 
@@ -87,13 +91,14 @@ class TransformCommRSB(object):
         '''
 
         try:
-            converter = TransformConverter()
-            rsb.converter.registerGlobalConverter(converter)
-
+            if not self.__transform_converter:
+                self.__transform_converter = TransformConverter()
+            rsb.converter.registerGlobalConverter(self.__transform_converter)
         except RuntimeError as re:
-            print "ERROR: ", re
+            print "ERROR (already registered converter) "  # , re
         except Exception as e:
             print "ERROR: ", type(e), e
+
 
         # TODO: what about the config?!
         # self.__transformer_config = transformer_config
@@ -105,6 +110,11 @@ class TransformCommRSB(object):
 
         self.__rsb_listener_transform.addHandler(self.transform_handler)
         self.__rsb_listener_sync.addHandler(self.sync_handler)
+
+        print "\nRSB setup: \nListeners:\n\t{} @ {} {}\n\t{} @ {}\nInformers:\n\t{} @ {}\n\t{} @ {}\n".format(self.__rsb_listener_transform.getId(), self.__rsb_listener_transform.scope, self.__rsb_listener_transform.getHandlers(),
+                                                                                                      self.__rsb_listener_sync.getId(), self.__rsb_listener_sync.scope,
+                                                                                                      self.__rsb_informer_transform.getId(), self.__rsb_informer_transform.scope,
+                                                                                                      self.__rsb_informer_sync.getId(), self.__rsb_informer_sync.scope)
 
         self.request_sync()
 
@@ -135,7 +145,6 @@ class TransformCommRSB(object):
         # TODO: use a lock here?
         for a_transform_listener in transform_listeners:
             self.__listeners.append(a_transform_listener)
-        pass
 
     def remove_transform_listener(self, transform_listener):
         try:
@@ -180,25 +189,34 @@ class TransformCommRSB(object):
 
         :param event:Incoming event
         '''
-        print "DATA :D"
         if event.getSenderId() == self.__rsb_informer_transform.getId():
             print "Received transform update from myself. Ignore. (id: {})".format(str(event.getSenderId()))
             return
 
         # data is of type rct.core.Transform
         data = event.getData()
-        received_authority = event.getMetaData().getUserInfo(self.__userKeyAuthority)
-        static_scope = self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_static))
+        if not isinstance(data, Transform):
+            print "Incoming data is of type {} (expected {}). Ignore.".format(type(data), Transform)
+            return
 
-        print "DEBUG: incoming vs static_scope: {} == {}".format(event.getScope(), static_scope)
-        is_static = event.getScope() == static_scope
+        try:
+            received_authority = event.getMetaData().userInfos[self.__user_key_authority]
+            static_scope = self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_static))
 
-        data.set_authority(received_authority)
-        print "Received transform from {}: {}".format(received_authority, str(data))
+            is_static = event.scope == static_scope
 
-        # TODO: threaded?
-        for a_listener in self.__listeners:
-            a_listener.new_transform_available(data, is_static)
+            data.set_authority(received_authority)
+            print "Received transform from {}: {}".format(received_authority, str(data))
+
+            # TODO: threaded?
+            for a_listener in self.__listeners:
+                a_listener.new_transform_available(data, is_static)
+
+        except KeyError as ke:
+            print "ERROR (auth: {}) during data handling: Cannot find neccessary key '{}' in meta data user info field of event! Actual content: {}".format(self.__authority, ke, event.metaData)
+        except Exception as e:
+            print "ERROR (auth: {}) during data handling: {}".format(self.__authority, str(e))
+            traceback.print_exc()
 
     def send_transform(self, transform, transform_type):
         '''
@@ -244,7 +262,6 @@ class TransformCommRSB(object):
             return False
 
         print "Sending {} to scope {}".format(str(transform), event.getScope())
-        transform.print_contents()
         self.__rsb_informer_transform.publishEvent(event)
         print "done."
 

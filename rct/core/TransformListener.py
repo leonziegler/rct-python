@@ -22,4 +22,4 @@ class TransformListener(object):
         :param transform: New transformation
         :param is_static: true if static, false otherwise
         '''
-        return
+        raise NotImplementedError()
