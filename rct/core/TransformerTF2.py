@@ -79,6 +79,7 @@ class TransformerTF2(TransformListener):
         :param time The time at which the value of the transform is desired. (0 will get the latest)
         :return A future object representing the request status and transform between the frames
         '''
+        # 'future object yada yada'
         pass
 
 
