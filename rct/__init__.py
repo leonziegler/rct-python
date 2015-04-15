@@ -93,21 +93,3 @@ class TransformerFactory(object):
 
 if __name__ == '__main__':
     print "import this lib to use rct..."
-    import time
-    import rct
-    import logging
-    logging.basicConfig()
-    a = rct.TransformerFactory()
-    r = a.create_transform_receiver()
-    p = a.create_transform_publisher("blubbAuth")
-
-    t_s = rct.Transform("blub", "parentoruu", "childoruu", time.time())
-    p.send_transform(t_s, rct.TransformType.STATIC)
-
-    # t_d = rct.Transform("bla", "leParent", "leChild", time.time())
-    # p.send_transform(t_d, rct.TransformType.DYNAMIC)
-
-    # err
-    # p.send_transform(rct.Transform(), rct.TransformType.STATIC)
-
-    print "done."

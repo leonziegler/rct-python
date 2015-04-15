@@ -3,14 +3,14 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
-import traceback
+import logging
 
 from rsb import Event, Scope, MetaData
 import rsb.converter
 
 from rct.communication.TransformConverter import TransformConverter
 from rct.core.Transform import Transform
-from rct.util import TransformType
+from rct.util import TransformType, get_logger_by_class
 
 
 # TODO: use abc for this class...
@@ -51,6 +51,8 @@ class TransformCommRSB(object):
 
     __transformer_config = None
 
+    __logger = None
+
     def __init__(self,
                  authority,
                  transform_listeners=None,
@@ -84,6 +86,9 @@ class TransformCommRSB(object):
         self.__send_cache_dynamic = {}
         self.__send_cache_static = {}
 
+        self.__logger = get_logger_by_class(self.__class__)
+
+
     def init(self, transformer_config):
         '''
         Constructor.
@@ -94,10 +99,10 @@ class TransformCommRSB(object):
             if not self.__transform_converter:
                 self.__transform_converter = TransformConverter()
             rsb.converter.registerGlobalConverter(self.__transform_converter)
-        except RuntimeError as re:
-            print "ERROR (already registered converter) "  # , re
+        except RuntimeError as _:
+            self.__logger.debug("Converter already registered. Ignoring.")
         except Exception as e:
-            print "ERROR: ", type(e), e
+            self.__logger.exception(e)
 
 
         # TODO: what about the config?!
@@ -111,10 +116,10 @@ class TransformCommRSB(object):
         self.__rsb_listener_transform.addHandler(self.transform_handler)
         self.__rsb_listener_sync.addHandler(self.sync_handler)
 
-        print "\nRSB setup: \nListeners:\n\t{} @ {} {}\n\t{} @ {}\nInformers:\n\t{} @ {}\n\t{} @ {}\n".format(self.__rsb_listener_transform.getId(), self.__rsb_listener_transform.scope, self.__rsb_listener_transform.getHandlers(),
+        self.__logger.debug("\nRSB setup: \nListeners:\n\t{} @ {} {}\n\t{} @ {}\nInformers:\n\t{} @ {}\n\t{} @ {}\n".format(self.__rsb_listener_transform.getId(), self.__rsb_listener_transform.scope, self.__rsb_listener_transform.getHandlers(),
                                                                                                       self.__rsb_listener_sync.getId(), self.__rsb_listener_sync.scope,
                                                                                                       self.__rsb_informer_transform.getId(), self.__rsb_informer_transform.scope,
-                                                                                                      self.__rsb_informer_sync.getId(), self.__rsb_informer_sync.scope)
+                                                                                                      self.__rsb_informer_sync.getId(), self.__rsb_informer_sync.scope))
 
         self.request_sync()
 
@@ -173,13 +178,13 @@ class TransformCommRSB(object):
         Requests a sync of transformations from all others in the network.
         '''
         if self.__rsb_informer_sync:
-            print "Sending sync request trigger from id {}".format(self.__rsb_informer_sync.getId())
+            self.__logger.info("Sending sync request trigger from id {}".format(self.__rsb_informer_sync.getId()))
             self.__rsb_informer_sync.publishData(None)
         else:
             raise Exception("communicator was not initialized!")
 
-    def print_contents(self):
-        print "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic))
+    def print_contents(self, level=logging.INFO):
+        self.__logger.log(level, "authority: {}, communication: {}, #listeners: {}, #cache: {}".format(self.__authority, "RSB", len(self.__listeners), len(self.__send_cache_dynamic)))
 
     def transform_handler(self, event):
         '''
@@ -190,13 +195,13 @@ class TransformCommRSB(object):
         :param event:Incoming event
         '''
         if event.getSenderId() == self.__rsb_informer_transform.getId():
-            print "Received transform update from myself. Ignore. (id: {})".format(str(event.getSenderId()))
+            self.__logger.debug("Received transform update from myself. Ignore. (id: {})".format(str(event.getSenderId())))
             return
 
         # data is of type rct.core.Transform
         data = event.getData()
         if not isinstance(data, Transform):
-            print "Incoming data is of type {} (expected {}). Ignore.".format(type(data), Transform)
+            self.__logger.warning("Incoming data is of type {} (expected {}). Ignore.".format(type(data), Transform))
             return
 
         try:
@@ -206,17 +211,16 @@ class TransformCommRSB(object):
             is_static = event.scope == static_scope
 
             data.set_authority(received_authority)
-            print "Received transform from {}: {}".format(received_authority, str(data))
+            self.__logger.info("Received transform from {}: {}".format(received_authority, str(data)))
 
             # TODO: threaded?
             for a_listener in self.__listeners:
                 a_listener.new_transform_available(data, is_static)
 
         except KeyError as ke:
-            print "ERROR (auth: {}) during data handling: Cannot find neccessary key '{}' in meta data user info field of event! Actual content: {}".format(self.__authority, ke, event.metaData)
+            self.__logger.warning("ERROR (auth: {}) during data handling: Cannot find neccessary key '{}' in meta data user info field of event! Actual content: {}".format(self.__authority, ke, event.metaData))
         except Exception as e:
-            print "ERROR (auth: {}) during data handling: {}".format(self.__authority, str(e))
-            traceback.print_exc()
+            self.__logger.exception("ERROR (auth: {}) during data handling: {}".format(self.__authority, str(e)))
 
     def send_transform(self, transform, transform_type):
         '''
@@ -227,7 +231,7 @@ class TransformCommRSB(object):
         '''
 
         if not self.__rsb_informer_transform:
-            print "RSB communicator was not initialized!"
+            self.__logger.error("RSB communicator was not initialized!")
 
         # some small type checks for usability
         assert isinstance(transform, Transform), "Input transformation has to be of type rct.Transform! (Input was: {})".format(type(transform))
@@ -241,7 +245,7 @@ class TransformCommRSB(object):
         else:
             meta_data.setUserInfo(self.__user_key_authority, transform.get_authority())
 
-        print "Publishing transform from {}".format(self.__rsb_informer_transform.getId())
+        self.__logger.info("Publishing transform from {}".format(self.__rsb_informer_transform.getId()))
 
         # TODO: threaded?
         event = Event()
@@ -258,12 +262,12 @@ class TransformCommRSB(object):
             event.setScope(self.__rsb_informer_transform.getScope().concat(Scope(self.__scope_suffix_dynamic)))
 
         else:
-            print "Cannot send transform. Reason: Unknown TransformType: {}".format(str(transform_type))
+            self.__logger.error("Cannot send transform. Reason: Unknown TransformType: {}".format(str(transform_type)))
             return False
 
-        print "Sending {} to scope {}".format(str(transform), event.getScope())
+        self.__logger.debug("Sending {} to scope {}".format(str(transform), event.getScope()))
         self.__rsb_informer_transform.publishEvent(event)
-        print "done."
+        self.__logger.debug("Sending successful!")
 
         return True
 
@@ -277,14 +281,14 @@ class TransformCommRSB(object):
         '''
 
         if event.getSenderId() == self.__rsb_informer_sync.getId():
-            print "Received sync request from myself. Ignore. (id: {})".format(str(event.getSenderId()))
+            self.__logger.debug("Received sync request from myself. Ignore. (id: {})".format(str(event.getSenderId())))
             return
 
         # TODO: thread this?
         self.publish_cache()
 
     def publish_cache(self):
-        print "Publishing cache..."
+        self.__logger.info("Publishing cache...")
         for _, v in self.__send_cache_dynamic.iteritems():
             event = Event()
             event.setData(v[0])

@@ -3,6 +3,7 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+import logging
 
 class TransformPublisher(object):
     '''
@@ -21,9 +22,9 @@ class TransformPublisher(object):
         self.__comm = comm
         self.__config = config
 
-    def print_contents(self):
-        self.__comm.print_contents()
-        self.__config.print_contents()
+    def print_contents(self, log_level=logging.INFO):
+        self.__comm.print_contents(level=log_level)
+        self.__config.print_contents(level=log_level)
 
     def get_config(self):
         return self.__comm.get_config()

@@ -3,6 +3,10 @@ Created on Apr 13, 2015
 
 @author: nkoester
 '''
+import logging
+
+from rct.util import get_logger_by_class
+
 
 class Transform(object):
     '''
@@ -15,6 +19,7 @@ class Transform(object):
     __frame_child = None
     __timestamp = None
     __authority = None
+    __logger = None
 
     def __init__(self, transform, frame_parent, frame_child, timestamp, authority=""):
         '''
@@ -26,6 +31,7 @@ class Transform(object):
         self.__timestamp = timestamp
         # TODO: where does the auth come from normally?
         self.__authority = authority
+        self.__logger = get_logger_by_class(self.__class__)
 #TODO: 
     def get_rotation_YPR(self):
         pass
@@ -106,5 +112,5 @@ class Transform(object):
     def get_transform(self):
         return self.__transform
 
-    def print_contents(self):
-        print "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform)
+    def print_contents(self, level=logging.INFO):
+        self.__logger.log(level, "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
