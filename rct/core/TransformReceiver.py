@@ -46,7 +46,7 @@ class TransformReceiver(object):
         # TODO: implement
         return self.__core.lookup_transform(target_frame, source_frame, a_time)
 
-    def lookup_transform_with_times(self, target_frame, target_time, source_frame, source_time, fixed_frame):
+    def lookup_transform_full(self, target_frame, target_time, source_frame, source_time, fixed_frame):
         '''
         Get the transform between two frames by frame ID assuming fixed frame.
         :param target_frame: The frame to which data should be transformed
@@ -56,17 +56,7 @@ class TransformReceiver(object):
         :param fixed_frame: The frame in which to assume the transform is constant in time.
         :return: The transform between the frames
         '''
-        return self.__core.lookup_transform_with_times(target_frame, target_time, source_frame, source_time, fixed_frame)
-
-    def request_transform(self, target_frame, source_frame, time):
-        '''
-        Request the transform between two frames by frame ID.
-        :param target_frame: The frame to which data should be transformed
-        :param source_frame: The frame where the data originated
-        :param time: The time at which the value of the transform is desired. (0 will get the latest)
-        :return: A future object representing the request status and transform between the frames
-        '''
-        return self.__core.request_transform(target_frame, source_frame, time)
+        return self.__core.lookup_transform_full(target_frame, target_time, source_frame, source_time, fixed_frame)
 
     def can_transform(self, target_frame, source_frame, time, error_msg):
         '''
@@ -74,12 +64,11 @@ class TransformReceiver(object):
         :param target_frame: The frame into which to transform
         :param source_frame: The time into which to transform
         :param time: The time at which to transform
-        :param error_msg: A pointer to a string which will be filled with why the transform failed, if not NULL
         :return: True if the transform is possible, false otherwise
         '''
         return self.__core.can_transform(target_frame, source_frame, time, error_msg)
 
-    def can_transform_with_times(self, target_frame, target_time, source_frame, source_time, fixed_frame, error_msg):
+    def can_transform_full(self, target_frame, target_time, source_frame, source_time, fixed_frame, error_msg):
         '''
         Test if a transform is possible
         :param target_frame: The frame into which to transform
@@ -87,10 +76,18 @@ class TransformReceiver(object):
         :param source_frame: The time into which to transform
         :param source_time: The time from which to transform
         :param fixed_frame: The frame in which to treat the transform as constant in time
-        :param error_msg: A pointer to a string which will be filled with why the transform failed, if not NULL
         :return: True if the transform is possible, false otherwise
         '''
         return self.__core.can_transform_with_times(target_frame, target_time, source_frame, source_time, fixed_frame, error_msg);
+
+    def all_frames_as_string(self):
+        return self.__core.all_frames_as_string()
+
+    def all_frames_as_YAML(self):
+        return self.__core.all_frames_as_YAML()
+
+    def clear(self):
+        self.__core.clear()
 
     def get_core(self):
         return self.__core

@@ -42,3 +42,9 @@ def get_logger_by_class(klass):
     @return: logger instance
     """
     return logging.getLogger(klass.__module__ + "." + klass.__name__)
+
+def pretty_float(a_float):
+    '''
+    Returns pretty pretty floats
+    '''
+    return "%0.3f" % a_float

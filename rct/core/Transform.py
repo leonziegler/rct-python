@@ -6,6 +6,7 @@ Created on Apr 13, 2015
 import logging
 
 from rct.util import get_logger_by_class
+from rct.core.Affine3d import Affine3d
 
 
 class Transform(object):
@@ -25,6 +26,8 @@ class Transform(object):
         '''
         Constructor
         '''
+        assert isinstance(transform, Affine3d), "Transform has to be of type rct.core.Affine3d!"
+
         self.__transform = transform
         self.__frame_parent = frame_parent
         self.__frame_child = frame_child
@@ -62,24 +65,15 @@ class Transform(object):
 #     }
 
     def get_rotation_matrix(self):
-        pass
-#     const Eigen::Matrix3d getRotationMatrix() const {
-#         return transform.rotation().matrix();
-#     }
+        # TODO
+        raise NotImplementedError()
+        # return self.__transform.rotation
 
     def get_translation(self):
-        pass
-
-#     const Eigen::Vector3d getTranslation() const {
-#         return transform.translation();
-#     }
+        return self.__transform.translation
 
     def get_rotation_quat(self):
-        pass
-#     const Eigen::Quaterniond getRotationQuat() const {
-#         Eigen::Quaterniond quat(transform.rotation().matrix());
-#         return quat;
-#     }
+        return self.__transform.rotation
 
 
     def set_frame_parent(self, frame_parent):
@@ -106,11 +100,15 @@ class Transform(object):
     def get_timestamp(self):
         return self.__timestamp
 
-    def set_transform(self, transform):
-        self.__transform = transform
+    def print_contents(self, level=logging.INFO):
+        self.__logger.log(level, "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
+
+    def __str__(self, *args, **kwargs):
+        return "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform)
+
 
     def get_transform(self):
         return self.__transform
-
-    def print_contents(self, level=logging.INFO):
-        self.__logger.log(level, "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
+    def set_transform(self, value):
+        self.__transform = value
+    transform = property(get_transform, set_transform)

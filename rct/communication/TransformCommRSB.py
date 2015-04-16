@@ -212,7 +212,7 @@ class TransformCommRSB(object):
             is_static = event.scope == static_scope
 
             data.set_authority(received_authority)
-            self.__logger.info("[{}] Received transform from {}: {}".format(self.__authority, received_authority, str(data)))
+            self.__logger.info("[{}] Received transform from '{}': {}".format(self.__authority, received_authority, data))
 
             # TODO: threaded?
             for a_listener in self.__listeners:
@@ -266,7 +266,7 @@ class TransformCommRSB(object):
             self.__logger.error("[{}] Cannot send transform. Reason: Unknown TransformType: {}".format(self.__authority, str(transform_type)))
             return False
 
-        self.__logger.debug("[{}] Sending {} to scope {}".format(self.__authority, str(transform), event.getScope()))
+        self.__logger.info("[{}] Sending {} to scope {}".format(self.__authority, transform.__str__(), event.getScope()))
         self.__rsb_informer_transform.publishEvent(event)
         self.__logger.debug("[{}] Sending successful!".format(self.__authority))
 

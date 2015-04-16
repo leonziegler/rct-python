@@ -6,6 +6,7 @@ Created on Apr 13, 2015
 # imports for availability to end users
 from rct.core.Transform import Transform
 from rct.util import TransformType
+from rct.core.Affine3d import Affine3d
 
 class TransformerFactory(object):
     '''
