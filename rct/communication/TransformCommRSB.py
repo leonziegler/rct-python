@@ -23,17 +23,19 @@ from rct.util import TransformType, get_logger_by_class
 #     @abc.abstractproperty
 #     ...
 # aintnobodygottimeforthat
+
 class TransformCommRSB(object):
+
     '''
     classdocs
     '''
 
     __authority = None
-    __scope_sync = "/rct/sync";
-    __scope_transforms = "/rct/transform";
-    __scope_suffix_static = "/static";
-    __scope_suffix_dynamic = "/dynamic";
-    __user_key_authority = "authority";
+    __scope_sync = "/rct/sync"
+    __scope_transforms = "/rct/transform"
+    __scope_suffix_static = "/static"
+    __scope_suffix_dynamic = "/dynamic"
+    __user_key_authority = "authority"
 
     __rsb_listener_transform = None
     __rsb_listener_sync = None
@@ -45,8 +47,8 @@ class TransformCommRSB(object):
     __transform_converter = None
 
     # dict: { str : (rct.transform, rsb.metadata), }
-    # str:
     __send_cache_dynamic = None
+    # dict: { str : (rct.transform, rsb.metadata), }
     __send_cache_static = None
 
     __transformer_config = None
@@ -82,12 +84,10 @@ class TransformCommRSB(object):
         if user_key_authority:
             self.__user_key_authority = user_key_authority
 
-
         self.__send_cache_dynamic = {}
         self.__send_cache_static = {}
 
         self.__logger = get_logger_by_class(self.__class__)
-
 
     def init(self, transformer_config):
         '''
@@ -104,7 +104,6 @@ class TransformCommRSB(object):
         except Exception as e:
             self.__logger.exception(e)
 
-
         # TODO: what about the config?!
         # self.__transformer_config = transformer_config
 
@@ -117,10 +116,10 @@ class TransformCommRSB(object):
         self.__rsb_listener_sync.addHandler(self.sync_handler)
 
         self.__logger.debug("[{}] RSB setup:\nListeners:\n\t{} @ {}\n\t{} @ {}\nInformers:\n\t{} @ {}\n\t{} @ {}\n".format(self.__authority,
-                                                                                                      self.__rsb_listener_transform.getId(), self.__rsb_listener_transform.scope,
-                                                                                                      self.__rsb_listener_sync.getId(), self.__rsb_listener_sync.scope,
-                                                                                                      self.__rsb_informer_transform.getId(), self.__rsb_informer_transform.scope,
-                                                                                                      self.__rsb_informer_sync.getId(), self.__rsb_informer_sync.scope))
+                                                                                                                           self.__rsb_listener_transform.getId(), self.__rsb_listener_transform.scope,
+                                                                                                                           self.__rsb_listener_sync.getId(), self.__rsb_listener_sync.scope,
+                                                                                                                           self.__rsb_informer_transform.getId(), self.__rsb_informer_transform.scope,
+                                                                                                                           self.__rsb_informer_sync.getId(), self.__rsb_informer_sync.scope))
 
         self.request_sync()
 
@@ -242,7 +241,7 @@ class TransformCommRSB(object):
         meta_data = MetaData()
 
         if transform.get_authority() is "":
-            meta_data.setUserInfo(self.__user_key_authority, self.__authority);
+            meta_data.setUserInfo(self.__user_key_authority, self.__authority)
         else:
             meta_data.setUserInfo(self.__user_key_authority, transform.get_authority())
 

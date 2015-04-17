@@ -7,6 +7,7 @@ from rct.util import pretty_float
 
 
 class Affine3d(object):
+
     '''
     Simple container datatype to hold the three components to construct an
     Affine 3d representation.
@@ -24,20 +25,26 @@ class Affine3d(object):
 
     def get_translation(self):
         return self.__translation
+
     def set_translation(self, value):
         self.__translation = value
+
     translation = property(get_translation, set_translation)
 
     def get_rotation(self):
         return self.__rotation
+
     def set_rotation(self, value):
         self.__rotation = value
+
     rotation = property(get_rotation, set_rotation)
 
     def set_scale(self, value):
         self.__scale = value
+
     def get_scale(self):
         return self.__scale
+
     scale = property(get_scale, set_scale)
 
     def __str__(self, *args, **kwargs):

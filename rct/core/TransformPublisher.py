@@ -5,7 +5,9 @@ Created on Apr 13, 2015
 '''
 import logging
 
+
 class TransformPublisher(object):
+
     '''
     Interface to create Transformation publishers.
     '''

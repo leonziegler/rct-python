@@ -10,11 +10,11 @@ from rct.core.Affine3d import Affine3d
 
 
 class Transform(object):
+
     '''
     classdocs
     '''
 
-    #Eigen::Affine3d 
     __transform = None
     __frame_parent = None
     __frame_child = None
@@ -26,7 +26,8 @@ class Transform(object):
         '''
         Constructor
         '''
-        assert isinstance(transform, Affine3d), "Transform has to be of type rct.core.Affine3d!"
+        assert isinstance(
+            transform, Affine3d), "Transform has to be of type rct.core.Affine3d!"
 
         self.__transform = transform
         self.__frame_parent = frame_parent
@@ -35,20 +36,21 @@ class Transform(object):
         # TODO: where does the auth come from normally?
         self.__authority = authority
         self.__logger = get_logger_by_class(self.__class__)
-#TODO: 
+
+    # TODO:
     def get_rotation_YPR(self):
         pass
 #     const Eigen::Vector3d getRotationYPR() const {
-# 
+#
 #         Eigen::Matrix3d mat = transform.rotation().matrix();
-# 
+#
 #         // this code is taken from buttel btMatrix3x3 getEulerYPR().
 #         // http://bulletphysics.org/Bullet/BulletFull/btMatrix3x3_8h_source.html
 #         // first use the normal calculus
 #         double yawOut = atan2(mat(1,0), mat(0,0));
 #         double pitchOut = asin(-mat(2,0));
 #         double rollOut = atan2(mat(2,1), mat(2,2));
-# 
+#
 #         // on pitch = +/-HalfPI
 #         if (abs(pitchOut) == M_PI / 2.0) {
 #             if (yawOut > 0)
@@ -60,7 +62,6 @@ class Transform(object):
 #             else
 #                 pitchOut += M_PI;
 #         }
-# 
 #         return Eigen::Vector3d(yawOut, pitchOut, rollOut);
 #     }
 
@@ -74,7 +75,6 @@ class Transform(object):
 
     def get_rotation_quat(self):
         return self.__transform.rotation
-
 
     def set_frame_parent(self, frame_parent):
         self.__frame_parent = frame_parent
@@ -101,14 +101,15 @@ class Transform(object):
         return self.__timestamp
 
     def print_contents(self, level=logging.INFO):
-        self.__logger.log(level, "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
+        self.__logger.log(level, "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(
+            self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
 
     def __str__(self, *args, **kwargs):
         return "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform)
 
-
     def get_transform(self):
         return self.__transform
+
     def set_transform(self, value):
         self.__transform = value
     transform = property(get_transform, set_transform)

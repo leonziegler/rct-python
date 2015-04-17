@@ -8,10 +8,13 @@ from rct.core.Transform import Transform
 from rct.util import TransformType
 from rct.core.Affine3d import Affine3d
 
+
 class TransformerFactory(object):
+
     '''
     Singlet to create a unified transformer factory
     '''
+
     from rct.util import Singleton
     from rct.core.TransformerConfig import TransformerConfig
     __metaclass__ = Singleton
@@ -88,7 +91,7 @@ class TransformerFactory(object):
             raise Exception("Can not generate communicator {}".format(configuration.get_comm_type()))
 
         # TODO: see cpp code
-        local_comms[0].init(configuration);
+        local_comms[0].init(configuration)
         return TransformPublisher(local_comms[0], configuration)
 
 if __name__ == '__main__':

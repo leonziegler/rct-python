@@ -7,6 +7,7 @@ import logging
 
 
 class CommunicatorType(object):
+
     '''
     Enum fake.
     '''
@@ -14,19 +15,25 @@ class CommunicatorType(object):
     RSB = "RSB"
     ROS = "ROS"
 
+
 class TransformType(object):
+
     '''
     Enum fake.
     '''
     STATIC = "STATIC"
     DYNAMIC = "DYNAMIC"
 
+
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super(
+                Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
 
 def get_logger_by_class(klass):
     """
@@ -42,6 +49,7 @@ def get_logger_by_class(klass):
     @return: logger instance
     """
     return logging.getLogger(klass.__module__ + "." + klass.__name__)
+
 
 def pretty_float(a_float):
     '''

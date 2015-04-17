@@ -13,6 +13,7 @@ from rct.core.Affine3d import Affine3d
 
 
 class TransformConverter(Converter):
+
     '''
     classdocs
     '''
@@ -64,13 +65,11 @@ class TransformConverter(Converter):
 
         new_transformation = Affine3d(position_vector, rotation_quaterniond, (1, 1, 1))
 
-
         # TODO: is this timestamp the right one? feels weird!
         transform = Transform(new_transformation,
                               frame_transform.frame_parent,
                               frame_transform.frame_child,
                               time.time())
-
 
         # new_transformation = None
         # TODO: implement with numpy magic

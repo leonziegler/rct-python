@@ -8,7 +8,9 @@ import logging
 from rct.util import get_logger_by_class
 from rct.util import CommunicatorType
 
+
 class TransformerConfig(object):
+
     '''
     Configuration holder.
     '''
@@ -19,7 +21,6 @@ class TransformerConfig(object):
 
     def __init__(self, communicator_type="RSB", chache_time=5.0):
         # imports
-
 
         self.__communicator_type = getattr(CommunicatorType, communicator_type, 'RSB')
         self.__cache_time = chache_time

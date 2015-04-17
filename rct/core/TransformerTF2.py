@@ -2,6 +2,7 @@
 Created on Apr 13, 2015
 
 @author: nkoester
+@todo: use abc to abstract this class
 '''
 import geometry_msgs.msg
 import logging
@@ -14,12 +15,13 @@ from rct.core.TransformListener import TransformListener
 from rct.util import get_logger_by_class
 from rct.core.Affine3d import Affine3d
 
-# TODO: ABC this class
 
 class TransformerTF2(TransformListener):
+
     '''
     Simple wrapper class for tf_py.
     '''
+
     __logger = None
     __tf_core = None
 
@@ -48,9 +50,11 @@ class TransformerTF2(TransformListener):
         tf_transform = self.convert_transform_to_tf(transform)
 
         if is_static:
-            self.__tf_core.set_transform_static(tf_transform, transform.get_authority())
+            self.__tf_core.set_transform_static(
+                tf_transform, transform.get_authority())
         else:
-            self.__tf_core.set_transform(tf_transform, transform.get_authority())
+            self.__tf_core.set_transform(
+                tf_transform, transform.get_authority())
 
     def lookup_transform(self, target_frame, source_frame, time):
         '''
@@ -61,7 +65,8 @@ class TransformerTF2(TransformListener):
         :return The transform between the frames
         '''
 
-        tf_transform = self.__tf_core.lookup_transform_core(target_frame, source_frame, rospy.Time.from_sec(time))
+        tf_transform = self.__tf_core.lookup_transform_core(
+            target_frame, source_frame, rospy.Time.from_sec(time))
         transform = self.convert_tf_to_transform(tf_transform)
         return transform
 
@@ -79,7 +84,8 @@ class TransformerTF2(TransformListener):
         tf2::ExtrapolationException, tf2::InvalidArgumentException
         '''
 
-        tf_transform = self.__tf_core.lookup_transform_full_core(target_frame, rospy.Time.from_sec(target_time), source_frame, rospy.Time.from_sec(source_time), fixed_frame)
+        tf_transform = self.__tf_core.lookup_transform_full_core(target_frame, rospy.Time.from_sec(
+            target_time), source_frame, rospy.Time.from_sec(source_time), fixed_frame)
         transform = self.convert_tf_to_transform(tf_transform)
         return transform
 
@@ -136,12 +142,12 @@ class TransformerTF2(TransformListener):
         transform_stamped.transform.translation.z = transform.get_translation()[2]
         return transform_stamped
 
-
     def convert_tf_to_transform(self, transform_stamped):
-#         C++ code:
-#       Eigen::Vector3d p(t.transform.translation.x, t.transform.translation.y, t.transform.translation.z);
-#       Eigen::Quaterniond r(t.transform.rotation.w, t.transform.rotation.x, t.transform.rotation.y,    t.transform.rotation.z);
-#       Eigen::Affine3d a = Eigen::Affine3d().fromPositionOrientationScale(p, r, Vector3d::Ones());
+        #   C++ code:
+        # Eigen::Vector3d p(t.transform.translation.x, t.transform.translation.y, t.transform.translation.z);
+        # Eigen::Quaterniond r(t.transform.rotation.w, t.transform.rotation.x, t.transform.rotation.y,    t.transform.rotation.z);
+        # Eigen::Affine3d a = Eigen::Affine3d().fromPositionOrientationScale(p,
+        # r, Vector3d::Ones());
 
         position_vector = (transform_stamped.translation.x,
                            transform_stamped.translation.y,
