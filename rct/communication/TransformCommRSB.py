@@ -211,7 +211,7 @@ class TransformCommRSB(object):
             is_static = event.scope == static_scope
 
             data.set_authority(received_authority)
-            self.__logger.info("[{}] Received transform from '{}': {}".format(self.__authority, received_authority, data))
+            self.__logger.debug("[{}] Received transform from '{}': {}".format(self.__authority, received_authority, data))
 
             # TODO: threaded?
             for a_listener in self.__listeners:
@@ -288,7 +288,7 @@ class TransformCommRSB(object):
         self.publish_cache()
 
     def publish_cache(self):
-        self.__logger.info("[{}] Publishing cache... ({} total)".format(self.__authority, len(self.__send_cache_dynamic.keys()) + len(self.__send_cache_static.keys())))
+        self.__logger.debug("[{}] Publishing cache... ({} total)".format(self.__authority, len(self.__send_cache_dynamic.keys()) + len(self.__send_cache_static.keys())))
         for _, v in self.__send_cache_dynamic.iteritems():
             event = Event()
             event.setData(v[0])

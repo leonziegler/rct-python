@@ -36,7 +36,7 @@ setup(name="rct-python",
           'Topic :: Text Processing :: Markup :: XML'
       ],
       # 'Louie', 'suds', 'restlib',
-      install_requires=['nose', 'nosexcover',
+      install_requires=['nose', 'nosexcover', 'pyrr',
                         "rsb-python>=0.11", "rstconverters==0.11"])
 
 # Make the scripts executable for Unit Testing

@@ -37,9 +37,9 @@ class Transform(object):
         self.__authority = authority
         self.__logger = get_logger_by_class(self.__class__)
 
-    # TODO:
     def get_rotation_YPR(self):
-        pass
+        # TODO:
+        raise NotImplementedError()
 #     const Eigen::Vector3d getRotationYPR() const {
 #
 #         Eigen::Matrix3d mat = transform.rotation().matrix();
@@ -66,15 +66,23 @@ class Transform(object):
 #     }
 
     def get_rotation_matrix(self):
-        # TODO
-        raise NotImplementedError()
-        # return self.__transform.rotation
+        return self.__transform.get_rotation_matrix()
+
+    def get_transformation_matrix(self):
+        return self.__transform.get_transformation_matrix()
+
+    def get_translation_matrix(self):
+        return self.__transform.get_translation_matrix()
 
     def get_translation(self):
         return self.__transform.translation
 
-    def get_rotation_quat(self):
-        return self.__transform.rotation
+    translation = property(get_translation, )
+
+    def get_rotation_quaternion(self):
+        return self.__transform.rotation_quaternion
+
+    rotation_quaternion = property(get_rotation_quaternion, )
 
     def set_frame_parent(self, frame_parent):
         self.__frame_parent = frame_parent
@@ -105,7 +113,7 @@ class Transform(object):
             self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform))
 
     def __str__(self, *args, **kwargs):
-        return "authority: {}, frame_parent: {}, frame_child: {}, timestamp: {}, transform: {}".format(self.__authority, self.__frame_parent, self.__frame_child, self.__timestamp, self.__transform)
+        return "parent: {}, child: {}, time: {}, transform: {}".format(self.__frame_parent, self.__frame_child, int(self.__timestamp), self.__transform)
 
     def get_transform(self):
         return self.__transform
