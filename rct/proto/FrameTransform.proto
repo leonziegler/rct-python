@@ -17,7 +17,7 @@ message FrameTransform {
     /**
      * 
      */
-    optional        rst.geometry.Pose    transform     = 1;
+    optional        .rst.geometry.Pose    transform     = 1;
     
     /**
      * 
@@ -32,5 +32,5 @@ message FrameTransform {
     /**
      * 
      */
-    optional        rst.timing.Timestamp time          = 4;
+    optional        .rst.timing.Timestamp time          = 4;
 }

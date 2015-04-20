@@ -11,27 +11,32 @@ if __name__ == '__main__':
     # Configure logging
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
     logging.getLogger('rsb').setLevel(logging.ERROR)
-    logging.getLogger('rct').setLevel(logging.DEBUG)
+    logging.getLogger('rct').setLevel(logging.INFO)
 
     tf2_subscriber = rct.TransformerFactory().create_transform_receiver()
 
-    print "run 1"
+    time.sleep(1)
+
+    print "\nrun 1 (right now)"
     try:
         transformation = tf2_subscriber.lookup_transform("A", "C", time.time())
+        print "Success!"
         transformation.print_contents()
     except Exception, e:
         print "ERROR: ", e
 
-    print "run 2"
-    try:
-        transformation = tf2_subscriber.lookup_transform("A", "C", time.time())
-        transformation.print_contents()
-    except Exception, e:
-        print "ERROR: ", e
-
-    print "run 3"
+    print "\nrun 2 (20 ms ago)"
     try:
         transformation = tf2_subscriber.lookup_transform("A", "C", time.time() - 0.2)
+        print "Success!"
+        transformation.print_contents()
+    except Exception, e:
+        print "ERROR: ", e
+
+    print "\nrun 3 (1 s ago)"
+    try:
+        transformation = tf2_subscriber.lookup_transform("A", "C", time.time() - 1.0)
+        print "Success!"
         transformation.print_contents()
     except Exception, e:
         print "ERROR: ", e

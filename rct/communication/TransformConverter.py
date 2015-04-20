@@ -43,7 +43,7 @@ class TransformConverter(Converter):
         frame_transform = FrameTransform()
         frame_transform.frame_parent = transform.get_frame_parent()
         frame_transform.frame_child = transform.get_frame_child()
-        frame_transform.time.time = int(time.time())
+        frame_transform.time.time = int(time.time() * 1000000)
         frame_transform.transform.translation.x = transform.translation.x
         frame_transform.transform.translation.y = transform.translation.y
         frame_transform.transform.translation.z = transform.translation.z

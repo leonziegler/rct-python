@@ -68,8 +68,7 @@ class TransformerTF2(TransformListener):
         :return The transform between the frames
         '''
 
-        tf_transform = self.__tf_core.lookup_transform_core(
-            target_frame, source_frame, rospy.Time.from_sec(time))
+        tf_transform = self.__tf_core.lookup_transform_core(target_frame, source_frame, rospy.Time.from_sec(time))
         transform = self.convert_tf_to_transform(tf_transform)
         return transform
 
