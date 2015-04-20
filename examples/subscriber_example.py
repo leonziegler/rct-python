@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # Configure logging
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.WARNING)
     logging.getLogger('rsb').setLevel(logging.ERROR)
-    logging.getLogger('rct').setLevel(logging.INFO)
+    logging.getLogger('rct').setLevel(logging.DEBUG)
 
     tf2_subscriber = rct.TransformerFactory().create_transform_receiver()
 
