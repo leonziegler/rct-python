@@ -4,7 +4,9 @@ Robotics Coordinate Transform (Python)
 # Dependencies
 
 1. You will need the `tf2_py` implementation which was split from the roscode. You can find this lib here
+
 > https://github.com/ros/geometry_experimental/tree/indigo-devel/tf2_py
+
 ``` bash
 export prefix="/tmp/rct"
 export prefix_tf2_py="${prefix}/tf2_py"
@@ -15,11 +17,15 @@ mkdir build && cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=$prefix_tf2_py
 make install -j4
 ```
+
 2. RSB
 See documentation at:
+
 > http://docs.cor-lab.de//rsb-manual/0.11/html/index.html
+
 3. RST
 See documentation at:
+
 > http://docs.cor-lab.de//rst-manual/0.11/html/index.html
 
 # Installation
