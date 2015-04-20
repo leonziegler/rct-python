@@ -17,6 +17,7 @@ class TransformListener(object):
         '''
         Constructor.
         '''
+
     @abc.abstractmethod
     def new_transform_available(self, transform, is_static):
         '''

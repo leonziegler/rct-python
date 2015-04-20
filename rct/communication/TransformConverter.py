@@ -25,7 +25,6 @@ class TransformConverter(Converter):
         '''
         Constructor
         '''
-        # TODO FIX THIS!
         self.__internal_converter = ProtocolBufferConverter(FrameTransform)
         super(TransformConverter, self).__init__(bytearray, Transform, self.__internal_converter.getWireSchema())
 
@@ -70,7 +69,6 @@ class TransformConverter(Converter):
 
         new_transformation = Affine3d(position_vector, rotation_quaterniond, scale)
 
-        # TODO: is this timestamp the right one? feels weird!
         transform = Transform(new_transformation,
                               frame_transform.frame_parent,
                               frame_transform.frame_child,

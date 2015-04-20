@@ -15,8 +15,6 @@ class Affine3d(object):
     Affine 3d representation.
     '''
 
-    # TODO: integrate with numpy in order to allow methods as used in C++ Eigen
-
     def __init__(self, translation, rotation_quaternion, scale):
         '''
         Constructor

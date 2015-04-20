@@ -30,7 +30,6 @@ class TransformReceiver(object):
         self.__config.print_contents(level=log_level)
 
     def get_config(self):
-        # TODO: why not return core config here?
         return self.__config
 
     def get_authority_name(self):
@@ -44,7 +43,6 @@ class TransformReceiver(object):
         :param a_time: The time at which the value of the transform is desired. (0 will get the latest)
         :return: The transform between the frames
         '''
-        # TODO: implement
         return self.__core.lookup_transform(target_frame, source_frame, a_time)
 
     def lookup_transform_full(self, target_frame, target_time, source_frame, source_time, fixed_frame):

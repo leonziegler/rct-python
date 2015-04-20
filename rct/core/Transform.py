@@ -33,12 +33,11 @@ class Transform(object):
         self.__frame_parent = frame_parent
         self.__frame_child = frame_child
         self.__timestamp = timestamp
-        # TODO: where does the auth come from normally?
         self.__authority = authority
         self.__logger = get_logger_by_class(self.__class__)
 
     def get_rotation_YPR(self):
-        # TODO:
+        # TODO: Implement
         raise NotImplementedError()
 #     const Eigen::Vector3d getRotationYPR() const {
 #

@@ -2,7 +2,6 @@
 Created on Apr 13, 2015
 
 @author: nkoester
-@todo: use abc to abstract this class
 '''
 import geometry_msgs.msg
 import logging

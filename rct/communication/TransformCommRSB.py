@@ -8,23 +8,13 @@ import logging
 from rsb import Event, Scope, MetaData
 import rsb.converter
 
+from rct.communication.TransformCommunicator import TransformCommunicator
 from rct.communication.TransformConverter import TransformConverter
 from rct.core.Transform import Transform
 from rct.util import TransformType, get_logger_by_class
 
 
-# TODO: use abc for this class...
-#
-# import abc
-#
-# class TransformCommunicator(object):
-#     __metaclass__ = abc.ABCMeta
-#
-#     @abc.abstractproperty
-#     ...
-# aintnobodygottimeforthat
-
-class TransformCommRSB(object):
+class TransformCommRSB(TransformCommunicator):
 
     '''
     classdocs
@@ -104,8 +94,7 @@ class TransformCommRSB(object):
         except Exception as e:
             self.__logger.exception(e)
 
-        # TODO: what about the config?!
-        # self.__transformer_config = transformer_config
+        self.__transformer_config = transformer_config
 
         self.__rsb_listener_transform = rsb.createListener(self.__scope_transforms)
         self.__rsb_listener_sync = rsb.createListener(self.__scope_sync)
