@@ -47,4 +47,4 @@ if __name__ == '__main__':
         t_d = rct.Transform(af_d, "B", "C", time.time())
 
         tf2_publisher.send_transform(t_d, rct.TransformType.DYNAMIC)
-        time.sleep(.02)
+        time.sleep(.019)

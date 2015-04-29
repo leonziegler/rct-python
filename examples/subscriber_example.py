@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     tf2_subscriber = rct.TransformerFactory().create_transform_receiver()
 
-    time.sleep(1)
+    time.sleep(2)
 
     print "\nrun 1 (right now)"
     try:
