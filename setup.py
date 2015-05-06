@@ -29,4 +29,4 @@ setup(name="rct-python",
           'Topic :: Text Processing :: Markup :: XML'
       ],
       # 'Louie', 'suds', 'restlib',
-      install_requires=['pyrr', "rsb-python>=0.11", "rstconverters==0.11"])
+      install_requires=['pyrr', "rsb-python>=0.12", "rstconverters>=0.12"])
