@@ -6,6 +6,8 @@ Created on Apr 16, 2015
 
 from rct.util import pretty_float
 from pyrr import Matrix44, Quaternion, Vector3
+import math
+import numpy as np
 
 
 class Affine3d(object):
@@ -53,6 +55,23 @@ class Affine3d(object):
 
     def get_rotation_matrix(self):
         return Matrix44.from_quaternion(self.__rotation_quaternion)
+
+    def get_rotation_YPR(self):
+        yawOut = math.atan2(self.__transform[1][0], self.__transform[0][0])
+        pitchOut = math.asin(-self.__transform[2][0])
+        rollOut = math.atan2(self.__transform[2][1], self.__transform[2][2])
+
+        # on pitch = +/-HalfPI
+        if abs(pitchOut) == (np.pi / 2.0):
+            if yawOut > 0:
+                yawOut -= np.pi
+            else:
+                yawOut += np.pi
+            if pitchOut > 0:
+                pitchOut -= np.pi
+            else:
+                pitchOut += np.pi
+        return [a / np.pi * 180 for a in (yawOut, pitchOut, rollOut)]
 
     def get_translation_matrix(self):
         return Matrix44.from_translation(self.__translation)
