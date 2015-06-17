@@ -13,7 +13,7 @@ from rct.core.Transform import Transform
 from rct.core.TransformListener import TransformListener
 from rct.util import get_logger_by_class
 from rct.core.Affine3d import Affine3d
-from pyrr import Quaternion, Vector3
+from pyrr import Quaternion, Vector4
 
 
 class TransformerTF2(TransformListener):
@@ -66,7 +66,6 @@ class TransformerTF2(TransformListener):
                (0 will get the latest)
         :return The transform between the frames
         '''
-
         tf_transform = self.__tf_core.lookup_transform_core(target_frame, source_frame, rospy.Time.from_sec(time))
         transform = self.convert_tf_to_transform(tf_transform)
         return transform
@@ -133,23 +132,24 @@ class TransformerTF2(TransformListener):
 
     def convert_transform_to_tf(self, transform):
         transform_stamped = geometry_msgs.msg.TransformStamped()
-        transform_stamped.header.frame_id = transform.get_frame_parent()
+        transform_stamped.header.frame_id = transform.frame_parent
         transform_stamped.header.stamp = rospy.Time.from_sec(time.time())
-        transform_stamped.child_frame_id = transform.get_frame_child()
-        transform_stamped.transform.rotation.w = transform.rotation_quaternion.w
-        transform_stamped.transform.rotation.x = transform.rotation_quaternion.x
-        transform_stamped.transform.rotation.y = transform.rotation_quaternion.y
-        transform_stamped.transform.rotation.z = transform.rotation_quaternion.z
-        transform_stamped.transform.translation.x = transform.translation.x
-        transform_stamped.transform.translation.y = transform.translation.y
-        transform_stamped.transform.translation.z = transform.translation.z
+        transform_stamped.child_frame_id = transform.frame_child
+        transform_stamped.transform.rotation.w = transform.transformation.rotation_quaternion.w
+        transform_stamped.transform.rotation.x = transform.transformation.rotation_quaternion.x
+        transform_stamped.transform.rotation.y = transform.transformation.rotation_quaternion.y
+        transform_stamped.transform.rotation.z = transform.transformation.rotation_quaternion.z
+        transform_stamped.transform.translation.x = transform.transformation.translation.x
+        transform_stamped.transform.translation.y = transform.transformation.translation.y
+        transform_stamped.transform.translation.z = transform.transformation.translation.z
         return transform_stamped
 
     def convert_tf_to_transform(self, transform_stamped):
-        position_vector = Vector3()
+        position_vector = Vector4()
         position_vector.x = transform_stamped.transform.translation.x
         position_vector.y = transform_stamped.transform.translation.y
         position_vector.z = transform_stamped.transform.translation.z
+        position_vector.w = 0.
 
         rotation_quaterniond = Quaternion()
         rotation_quaterniond.w = transform_stamped.transform.rotation.w
@@ -157,7 +157,7 @@ class TransformerTF2(TransformListener):
         rotation_quaterniond.y = transform_stamped.transform.rotation.y
         rotation_quaterniond.z = transform_stamped.transform.rotation.z
 
-        scale = Vector3([1., 1., 1.])
+        scale = Vector4([1., 1., 1., 1.])
 
         affine3d = Affine3d(position_vector, rotation_quaterniond, scale)
 

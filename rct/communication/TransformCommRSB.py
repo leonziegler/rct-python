@@ -199,8 +199,8 @@ class TransformCommRSB(TransformCommunicator):
 
             is_static = event.scope == static_scope
 
-            data.set_authority(received_authority)
-            self.__logger.debug("[{}] Received transform from '{}': {}".format(self.__authority, received_authority, data))
+            data.__authority = received_authority
+            self.__logger.debug("[%s] Received transform from '%s: %s", self.__authority, received_authority, data)
 
             # TODO: threaded?
             for a_listener in self.__listeners:

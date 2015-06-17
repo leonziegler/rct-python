@@ -5,7 +5,7 @@ Created on Apr 16, 2015
 '''
 
 from rct.util import pretty_float
-from pyrr import Matrix44, Quaternion, Vector3
+from pyrr import Matrix33, Matrix44, Quaternion, Vector3, Vector4
 import math
 import numpy as np
 
@@ -17,49 +17,76 @@ class Affine3d(object):
     Affine 3d representation.
     '''
 
-    def __init__(self, translation, rotation_quaternion, scale):
+    def __init__(self, translation, rotation, scale):
         '''
         Constructor
         '''
-        assert isinstance(rotation_quaternion, Quaternion), "rotation_quaternion needs to be of type pyrr.Quaternion"
-        assert isinstance(translation, Vector3), "translation needs to be of type pyrr.Vector3"
-        assert isinstance(scale, Vector3), "scale needs to be of type pyrr.Vector3"
+        assert isinstance(rotation, Quaternion), "rotation needs to be of type pyrr.Quaternion"
+        assert isinstance(translation, Vector4), "translation needs to be of type pyrr.Vector4"
+        assert isinstance(scale, Vector4), "scale needs to be of type pyrr.Vector4"
 
         self.__translation = translation
-        self.__rotation_quaternion = rotation_quaternion
+        self.__rotation_quaternion = rotation
         self.__scale = scale
 
-    def get_translation(self):
+    def apply_transformation(self, a_point):
+        '''
+        Applies the transformation to a given point (vec4 or vec3).
+        '''
+        assert isinstance(a_point, Vector4) or isinstance(a_point, Vector3)
+        if isinstance(a_point, Vector4):
+            return self.__apply_transformation_vec4(a_point)
+        elif isinstance(a_point, Vector3):
+            return self.__apply_transformation_vec3(a_point)
+
+    def __apply_transformation_vec4(self, a_point):
+        '''
+        Applies the transformation to a given Verctor4.
+        :param a_point: Vector4
+        '''
+        return (Matrix44.from_quaternion(self.__rotation_quaternion).T * a_point) + self.__translation
+
+    def __apply_transformation_vec3(self, a_point):
+        '''
+        Applies the transformation to a given Verctor3.
+        :param a_point: Vector3
+        '''
+        return (Matrix33.from_quaternion(self.__rotation_quaternion).T * a_point) + Vector3.from_vector4(self.__translation)[0]
+
+    def __get_translation(self):
         return self.__translation
 
-    def set_translation(self, value):
+    def __set_translation(self, value):
         self.__translation = value
 
-    translation = property(get_translation, set_translation)
+    translation = property(__get_translation, __set_translation)
 
-    def get_rotation_quaternion(self):
+    def __get_rotation_quaternion(self):
         return self.__rotation_quaternion
 
-    def set_rotation_quaternion(self, value):
+    def __set_rotation_quaternion(self, value):
         self.__rotation_quaternion = value
 
-    rotation_quaternion = property(get_rotation_quaternion, set_rotation_quaternion)
+    rotation_quaternion = property(__get_rotation_quaternion, __set_rotation_quaternion)
 
-    def set_scale(self, value):
+    def __set_scale(self, value):
         self.__scale = value
 
-    def get_scale(self):
+    def __get_scale(self):
         return self.__scale
 
-    scale = property(get_scale, set_scale)
+    scale = property(__get_scale, __set_scale)
 
-    def get_rotation_matrix(self):
+    def __get_rotation_matrix(self):
         return Matrix44.from_quaternion(self.__rotation_quaternion)
 
-    def get_rotation_YPR(self):
-        yawOut = math.atan2(self.__transform[1][0], self.__transform[0][0])
-        pitchOut = math.asin(-self.__transform[2][0])
-        rollOut = math.atan2(self.__transform[2][1], self.__transform[2][2])
+    rotation_matrix = property(__get_rotation_matrix,)
+
+    def __get_rotation_YPR(self):
+        transformation_matrix = self.transformation_matrix
+        yawOut = math.atan2(transformation_matrix[1][0], transformation_matrix[0][0])
+        pitchOut = math.asin(-transformation_matrix[2][0])
+        rollOut = math.atan2(transformation_matrix[2][1], transformation_matrix[2][2])
 
         # on pitch = +/-HalfPI
         if abs(pitchOut) == (np.pi / 2.0):
@@ -73,13 +100,27 @@ class Affine3d(object):
                 pitchOut += np.pi
         return [a / np.pi * 180 for a in (yawOut, pitchOut, rollOut)]
 
-    def get_translation_matrix(self):
-        return Matrix44.from_translation(self.__translation)
+    yrp = property(__get_rotation_YPR)
 
-    def get_transformation_matrix(self):
-        return Matrix44.from_translation(self.__translation) * self.__rotation_quaternion
+    def __get_transformation_matrix(self):
+        '''
+        Creates and returns the complete transformation 
+        matrix column-major format!
+
+        I.e.:
+
+        ( ROTATION               x_translation)
+        (         MATRIX         y_translation)
+        (                 HERE   z_translation)
+        (0        0           0         1     )
+        '''
+        # ensure column-major format -> numpy thinks matrices have their
+        # origin in the top left corner ...
+        return ((Matrix44.from_scale(self.__scale) * self.__rotation_quaternion).T * Matrix44.from_translation(self.__translation))
+
+    transformation_matrix = property(__get_transformation_matrix,)
 
     def __str__(self, *args, **kwargs):
-        x = self.get_transformation_matrix()
-        pretty_matrix = " ; ".join(map(str, [map(pretty_float, col) for col in [a_col.tolist() for a_col in [x.r1, x.r2, x.r3, x.r4]]])).replace("'", "").replace("[", "").replace("]", "")
-        return "{} | {} | {}".format(map(pretty_float, self.translation), pretty_matrix, map(pretty_float, self.scale))
+        x = self.transformation_matrix
+        pretty_matrix = "\n".join(map(str, [map(pretty_float, col) for col in [a_col.tolist() for a_col in [x.r1, x.r2, x.r3, x.r4]]])).replace("'", "").replace("[", "").replace("]", "")
+        return "scale: {}\ntranslation: {}\nroatation:\n{}".format(map(pretty_float, self.scale), map(pretty_float, self.translation), pretty_matrix)

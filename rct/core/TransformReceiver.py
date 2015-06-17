@@ -57,7 +57,7 @@ class TransformReceiver(object):
         '''
         return self.__core.lookup_transform_full(target_frame, target_time, source_frame, source_time, fixed_frame)
 
-    def can_transform(self, target_frame, source_frame, time, error_msg):
+    def can_transform(self, target_frame, source_frame, time):
         '''
         Test if a transform is possible.
         :param target_frame: The frame into which to transform
@@ -65,9 +65,9 @@ class TransformReceiver(object):
         :param time: The time at which to transform
         :return: True if the transform is possible, false otherwise
         '''
-        return self.__core.can_transform(target_frame, source_frame, time, error_msg)
+        return self.__core.can_transform(target_frame, source_frame, time)
 
-    def can_transform_full(self, target_frame, target_time, source_frame, source_time, fixed_frame, error_msg):
+    def can_transform_full(self, target_frame, target_time, source_frame, source_time, fixed_frame):
         '''
         Test if a transform is possible
         :param target_frame: The frame into which to transform
@@ -77,7 +77,7 @@ class TransformReceiver(object):
         :param fixed_frame: The frame in which to treat the transform as constant in time
         :return: True if the transform is possible, false otherwise
         '''
-        return self.__core.can_transform_with_times(target_frame, target_time, source_frame, source_time, fixed_frame, error_msg)
+        return self.__core.can_transform_full(target_frame, target_time, source_frame, source_time, fixed_frame)
 
     def all_frames_as_string(self):
         return self.__core.all_frames_as_string()
