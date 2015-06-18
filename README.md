@@ -63,5 +63,40 @@ p.send_transform(t_d, rct.TransformType.DYNAMIC)
 r = a.create_transform_receiver()
 ```
 
+# Example Usage
+You can simply start the `cross-lib-provider.py` file, which will provide a static and a dynamic transformation. There is a similar example in the java implementation of rct, which does the with a different predix.
+
+Afterwards, simply running the `cross-lib-tester.py` will perform a test on the by python and java provided transformation.
+
+Alternatively, you can paste this in an ipython session within a setup environment to test one single transformation and apply it.
+
+``` python
+import logging
+logging.getLogger('rsb').setLevel(logging.DEBUG)
+logging.getLogger('rct').setLevel(logging.DEBUG)
+
+import time
+
+import numpy as np
+np.set_printoptions(precision=4)
+
+import rct
+from pyrr import Matrix33, Matrix44, Vector4
+
+tf2_subscriber = rct.TransformerFactory().create_transform_receiver()
+
+print "Available Transforms:\n\t".join(("\t" + tf2_subscriber.all_frames_as_string()).split('\n'))
+
+when = time.time()
+time.sleep(0.2)
+
+tf = tf2_subscriber.lookup_transform("python_static", "base", when)
+
+p = Vector4([1.0, 1.0, 1.0, 1.0])
+p_transformed = tf.transformation.apply_transformation(p)
+
+print p, "-->", p_transformed
+```
+
 # Notes
 Please note that the future pattern has not yet been implemented in this version. Only past transformations can be obtained.
