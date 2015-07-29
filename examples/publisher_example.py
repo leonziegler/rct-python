@@ -10,7 +10,7 @@ Created on Apr 17, 2015
 import logging
 import time
 
-from pyrr import Quaternion, Matrix44, Vector3
+from pyrr import Quaternion, Matrix44, Vector4
 
 import numpy as np
 import rct
@@ -24,9 +24,9 @@ if __name__ == '__main__':
 
     tf2_publisher = rct.TransformerFactory().create_transform_publisher("ExamplePublisher")
 
-    translation = Vector3([0., 1., 2.])
+    translation = Vector4([0., 1., 2.,1.])
     rotation = Quaternion.from_x_rotation(np.pi)
-    scale = Vector3([1., 1., 1.])
+    scale = Vector4([1., 1., 1., 1.])
     matrix = Matrix44.from_translation(translation) * rotation
 
     af_s = rct.Affine3d(translation, matrix.quaternion, scale)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     tf2_publisher.send_transform(t_s, rct.TransformType.STATIC)
 
     angle = 0
-    position = Vector3([1., 0., 0.])
+    position = Vector4([1., 0., 0.,0.])
     while(True):
 
         angle += 0.01
